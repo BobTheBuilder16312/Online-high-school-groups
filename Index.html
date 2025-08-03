@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online High School Groups</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .filter-select {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+        }
+
+        .create-btn {
+            background: #28a745;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .create-btn:hover {
+            background: #218838;
+        }
+
+        .groups-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .group-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .group-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .group-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .subject-tag {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .subject-math { background: #e3f2fd; color: #1976d2; }
+        .subject-art-history { background: #fce4ec; color: #c2185b; }
+        .subject-computer-tech { background: #e8f5e8; color: #388e3c; }
+        .subject-science { background: #fff3e0; color: #f57c00; }
+        .subject-reading-writing { background: #f3e5f5; color: #7b1fa2; }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .status-live {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .status-active {
+            color: #28a745;
+        }
+
+        .status-scheduled {
+            color: #ffc107;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .live-dot { background: #dc3545; animation: pulse 2s infinite; }
+        .active-dot { background: #28a745; }
+        .scheduled-dot { background: #ffc107; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .member-count {
+            color: #666;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .group-description {
+            color: #666;
+            margin: 15px 0;
+            line-height: 1.5;
+        }
+
+        .meeting-time {
+            color: #555;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .recent-activity {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .recent-activity h4 {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .activity-list {
+            space-y: 8px;
+        }
+
+        .activity-item {
+            font-size: 0.9em;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-user {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .activity-time {
+            color: #999;
+            font-size: 0.8em;
+        }
+
+        .join-btn {
+            width: 100%;
+            background: #667eea;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background 0.3s;
+            margin-top: 15px;
+        }
+
+        .join-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .modal h2 {
+            margin-bottom: 25px;
+            color: #333;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .cancel-btn {
+            background: #6c757d;
+            color: white;
+        }
+
+        .cancel-btn:hover {
+            background: #5a6268;
+        }
+
+        .submit-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .submit-btn:hover {
+            background: #218838;
+        }
+
+        .ai-assistant {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #7c3aed;
+            color: white;
+            padding: 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .ai-assistant:hover {
+            background: #6d28d9;
+            transform: scale(1.1);
+        }
+
+        /* Premium Section Styles */
+        .premium-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 50px -20px 0 -20px;
+            padding: 60px 20px;
+            color: white;
+            text-align: center;
+        }
+
+        .premium-header h2 {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .premium-header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .premium-plans {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 800px;
+            margin: 0 auto 40px;
+        }
+
+        .plan-card {
+            background: white;
+            color: #333;
+            border-radius: 20px;
+            padding: 40px 30px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .plan-card.featured {
+            transform: scale(1.05);
+            border: 3px solid #ffd700;
+        }
+
+        .plan-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #28a745;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .plan-badge.best-value {
+            background: #ffd700;
+            color: #333;
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
+        }
+
+        .plan-card h3 {
+            font-size: 1.5em;
+            margin: 20px 0 15px;
+            font-weight: bold;
+        }
+
+        .price {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .currency {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .amount {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .period {
+            font-size: 1em;
+            color: #666;
+            margin-left: 5px;
+        }
+
+        .savings {
+            background: #28a745;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .features {
+            list-style: none;
+            padding: 0;
+            margin: 25px 0;
+            text-align: left;
+        }
+
+        .features li {
+            padding: 8px 0;
+            font-size: 0.95em;
+            border-bottom: 1px solid #eee;
+        }
+
+        .features li:last-child {
+            border-bottom: none;
+        }
+
+        .premium-btn {
+            width: 100%;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .monthly-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .monthly-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .yearly-btn {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #333;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .yearly-btn:hover {
+            background: linear-gradient(45deg, #ffed4e, #ffd700);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .premium-guarantee {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-top: 30px;
+        }
+
+        .premium-guarantee p {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .online-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85em;
+            color: #28a745;
+            margin-top: 8px;
+        }
+
+        .online-dot {
+            width: 6px;
+            height: 6px;
+            background: #28a745;
+            border-radius: 50%;
+        }
+
+        @media (max-width: 768px) {
+            .groups-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-input {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                👥 Online High School Groups
+            </h1>
+            <p>Connecting high school students for collaborative learning</p>
+        </div>
+
+        <div class="controls">
+            <div class="controls-row">
+                <input type="text" class="search-input" id="searchInput" placeholder="Search study groups..." onkeyup="searchGroups()">
+                <select class="filter-select" id="subjectFilter" onchange="filterBySubject()">
+                    <option value="all">All Subjects</option>
+                    <option value="Math">Math</option>
+                    <option value="Art History">Art History</option>
+                    <option value="Computer Tech">Computer Tech</option>
+                    <option value="Science">Science</option>
+                    <option value="Reading/Writing">Reading/Writing</option>
+                </select>
+                <button class="create-btn" onclick="openCreateModal()">➕ Create Group</button>
+            </div>
+        </div>
+
+        <div class="groups-grid" id="groupsContainer">
+            <!-- Groups will be displayed here -->
+        </div>
+    </div>
+
+    <!-- Premium Section -->
+    <div class="premium-section">
+        <div class="premium-header">
+            <h2>🌟 Upgrade to Premium</h2>
+            <p>Unlock advanced features and supercharge your learning</p>
+        </div>
+        
+        <div class="premium-plans">
+            <div class="plan-card monthly">
+                <div class="plan-badge">Most Flexible</div>
+                <h3>Monthly Premium</h3>
+                <div class="price">
+                    <span class="currency">$</span>
+                    <span class="amount">30</span>
+                    <span class="period">/month</span>
+                </div>
+                <ul class="features">
+                    <li>✅ Unlimited study groups</li>
+                    <li>✅ Advanced AI tutor</li>
+                    <li>✅ File sharing & uploads</li>
+                    <li>✅ Video study sessions</li>
+                    <li>✅ Priority support</li>
+                    <li>✅ Study analytics</li>
+                </ul>
+                <button class="premium-btn monthly-btn" onclick="choosePlan('monthly')">Start Monthly Plan</button>
+            </div>
+            
+            <div class="plan-card yearly featured">
+                <div class="plan-badge best-value">Best Value - Save $210!</div>
+                <h3>Yearly Premium</h3>
+                <div class="price">
+                    <span class="currency">$</span>
+                    <span class="amount">150</span>
+                    <span class="period">/year</span>
+                </div>
+                <div class="savings">Save 58% vs Monthly!</div>
+                <ul class="features">
+                    <li>✅ Everything in Monthly</li>
+                    <li>✅ 1-on-1 tutor sessions</li>
+                    <li>✅ Custom study plans</li>
+                    <li>✅ Exam prep materials</li>
+                    <li>✅ College prep guidance</li>
+                    <li>✅ Parent progress reports</li>
+                </ul>
+                <button class="premium-btn yearly-btn" onclick="choosePlan('yearly')">Start Yearly Plan</button>
+            </div>
+        </div>
+        
+        <div class="premium-guarantee">
+            <p>💯 30-day money-back guarantee • Cancel anytime • No hidden fees</p>
+        </div>
+    </div>
+
+    <!-- AI Assistant Button -->
+    <div class="ai-assistant" onclick="openAIChat()" title="AI Study Assistant">
+        🤖
+    </div>
+
+    <!-- Create Group Modal -->
+    <div class="modal" id="createModal">
+        <div class="modal-content">
+            <h2>Create New Study Group</h2>
+            <div class="form-group">
+                <label>Group Name:</label>
+                <input type="text" id="groupName" placeholder="e.g., AP Calculus Study Group">
+            </div>
+            <div class="form-group">
+                <label>Subject:</label>
+                <select id="groupSubject">
+                    <option value="">Select a subject</option>
+                    <option value="Math">Math</option>
+                    <option value="Art History">Art History</option>
+                    <option value="Computer Tech">Computer Tech</option>
+                    <option value="Science">Science</option>
+                    <option value="Reading/Writing">Reading/Writing</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Description:</label>
+                <textarea id="groupDescription" placeholder="What will your group focus on studying?"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Meeting Time:</label>
+                <input type="text" id="meetingTime" placeholder="e.g., Wednesdays 6 PM">
+            </div>
+            <div class="modal-buttons">
+                <button class="cancel-btn" onclick="closeCreateModal()">Cancel</button>
+                <button class="submit-btn" onclick="createGroup()">Create Group</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Study groups data
+        let studyGroups = [
+            {
+                id: 1,
+                name: "AP Calculus Study Session",
+                subject: "Math",
+                description: "Working through derivatives, integrals, and limits together!",
+                members: 8,
+                maxMembers: 12,
+                meetingTime: "Now - 9 PM",
+                status: "live",
+                activities: [
+                    { user: "Sarah M.", action: "asked about integration by parts", time: "2 min ago" },
+                    { user: "Mike K.", action: "shared LIATE method explanation", time: "1 min ago" }
+                ],
+                onlineNow: 4
+            },
+            {
+                id: 2,
+                name: "Renaissance Art Discussion",
+                subject: "Art History",
+                description: "Exploring the masters: Leonardo, Michelangelo, Raphael",
+                members: 6,
+                maxMembers: 10,
+                meetingTime: "6 PM - 8 PM",
+                status: "active",
+                activities: [
+                    { user: "Jordan F.", action: "analyzing Botticelli's Birth of Venus", time: "5 min ago" },
+                    { user: "Luna P.", action: "shared Renaissance humanism notes", time: "3 min ago" }
+                ],
+                onlineNow: 3
+            },
+            {
+                id: 3,
+                name: "Python Programming Club",
+                subject: "Computer Tech",
+                description: "Learning Python basics and building cool projects",
+                members: 12,
+                maxMembers: 15,
+                meetingTime: "4 PM - 6 PM",
+                status: "scheduled",
+                activities: [
+                    { user: "Taylor S.", action: "shared calculator app code", time: "1 hour ago" }
+                ],
+                onlineNow: 2
+            },
+            {
+                id: 4,
+                name: "Biology Lab Help",
+                subject: "Science",
+                description: "Cell biology, genetics, and lab report assistance",
+                members: 7,
+                maxMembers: 12,
+                meetingTime: "7 PM - 9 PM",
+                status: "active",
+                activities: [
+                    { user: "Casey L.", action: "asked about mitosis phases", time: "10 min ago" },
+                    { user: "Riley M.", action: "shared PMAT diagrams", time: "8 min ago" }
+                ],
+                onlineNow: 3
+            },
+            {
+                id: 5,
+                name: "Creative Writing Workshop",
+                subject: "Reading/Writing",
+                description: "Sharing stories, poems, and getting feedback on our writing",
+                members: 9,
+                maxMembers: 12,
+                meetingTime: "3 PM - 5 PM",
+                status: "live",
+                activities: [
+                    { user: "Avery P.", action: "shared time travel short story", time: "5 min ago" },
+                    { user: "Quinn S.", action: "offered feedback on sci-fi piece", time: "3 min ago" }
+                ],
+                onlineNow: 4
+            }
+        ];
+
+        // Display groups when page loads
+        window.onload = function() {
+            displayGroups(studyGroups);
+        };
+
+        // Function to display groups
+        function displayGroups(groups) {
+            const container = document.getElementById('groupsContainer');
+            container.innerHTML = '';
+
+            groups.forEach(group => {
+                const subjectClass = `subject-${group.subject.toLowerCase().replace(/\//g, '-').replace(/\s+/g, '-')}`;
+                const statusClass = `status-${group.status}`;
+                const statusDotClass = `${group.status}-dot`;
+                
+                const activitiesHtml = group.activities.map(activity => `
+                    <div class="activity-item">
+                        <span class="activity-user">${activity.user}</span> ${activity.action}
+                        <div class="activity-time">${activity.time}</div>
+                    </div>
+                `).join('');
+
+                const groupCard = `
+                    <div class="group-card">
+                        <div class="group-header">
+                            <div>
+                                <div class="group-title">${group.name}</div>
+                                <span class="subject-tag ${subjectClass}">${group.subject}</span>
+                                <div class="status-indicator ${statusClass}">
+                                    <span class="status-dot ${statusDotClass}"></span>
+                                    ${group.status.toUpperCase()}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="member-count">👥 ${group.members}/${group.maxMembers}</div>
+                                <div class="online-indicator">
+                                    <span class="online-dot"></span>
+                                    ${group.onlineNow} online now
+                                </div>
+                            </div>
+                        </div>
+                        <div class="group-description">${group.description}</div>
+                        <div class="meeting-time">🗓️ ${group.meetingTime}</div>
+                        <div class="recent-activity">
+                            <h4>Recent Activity</h4>
+                            <div class="activity-list">
+                                ${activitiesHtml}
+                            </div>
+                        </div>
+                        <button class="join-btn" onclick="joinGroup(${group.id})">Join Study Group</button>
+                    </div>
+                `;
+                container.innerHTML += groupCard;
+            });
+        }
+
+        // Search function
+        function searchGroups() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const selectedSubject = document.getElementById('subjectFilter').value;
+            
+            let filteredGroups = studyGroups.filter(group => {
+                const matchesSearch = group.name.toLowerCase().includes(searchTerm) ||
+                                    group.subject.toLowerCase().includes(searchTerm) ||
+                                    group.description.toLowerCase().includes(searchTerm);
+                const matchesSubject = selectedSubject === 'all' || group.subject === selectedSubject;
+                return matchesSearch && matchesSubject;
+            });
+            
+            displayGroups(filteredGroups);
+        }
+
+        // Filter by subject
+        function filterBySubject() {
+            searchGroups(); // Reuse the search function
+        }
+
+        // Modal functions
+        function openCreateModal() {
+            document.getElementById('createModal').style.display = 'block';
+        }
+
+        function closeCreateModal() {
+            document.getElementById('createModal').style.display = 'none';
+            // Clear form
+            document.getElementById('groupName').value = '';
+            document.getElementById('groupSubject').value = '';
+            document.getElementById('groupDescription').value = '';
+            document.getElementById('meetingTime').value = '';
+        }
+
+        // Create new group
+        function createGroup() {
+            const name = document.getElementById('groupName').value;
+            const subject = document.getElementById('groupSubject').value;
+            const description = document.getElementById('groupDescription').value;
+            const meetingTime = document.getElementById('meetingTime').value;
+
+            if (name && subject && description) {
+                const newGroup = {
+                    id: studyGroups.length + 1,
+                    name: name,
+                    subject: subject,
+                    description: description,
+                    members: 1,
+                    maxMembers: 12,
+                    meetingTime: meetingTime || "TBD",
+                    status: "active",
+                    activities: [
+                        { user: "You", action: "created this group", time: "just now" }
+                    ],
+                    onlineNow: 1
+                };
+
+                studyGroups.unshift(newGroup); // Add to beginning
+                displayGroups(studyGroups);
+                closeCreateModal();
+                alert(`✅ "${name}" group created successfully! You're the first member.`);
+            } else {
+                alert('⚠️ Please fill in all required fields (Name, Subject, Description)');
+            }
+        }
+
+        // Join group function
+        function joinGroup(groupId) {
+            const group = studyGroups.find(g => g.id === groupId);
+            if (group && group.members < group.maxMembers) {
+                group.members++;
+                group.onlineNow++;
+                group.activities.unshift({
+                    user: "You",
+                    action: "joined the group",
+                    time: "just now"
+                });
+                displayGroups(studyGroups);
+                alert(`🎉 Welcome to "${group.name}"! You can now participate in discussions and get help with ${group.subject}.`);
+            } else if (group.members >= group.maxMembers) {
+                alert('😔 This group is currently full. Try joining another group or create your own!');
+            }
+        }
+
+        // Premium plan selection
+        function choosePlan(planType) {
